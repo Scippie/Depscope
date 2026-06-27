@@ -7,6 +7,8 @@ It is built with **.NET 8** and **Avalonia UI**.
 
 DepScope is local-first: project files are read from your machine, source code is not uploaded, and startup update checks are disabled by default. Registry lookups can also be disabled with offline/private mode.
 
+This project started as a personal tool to help me keep my own projects up to date and easier to review. I developed it for my own workflow, with OpenAI assistance used for parts of the implementation, review, and documentation process. I am publishing it because it may also help other developers monitor dependencies, spot outdated packages, and keep projects safer.
+
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![.NET](https://img.shields.io/badge/.NET-8.0-5C2D91?logo=dotnet)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
