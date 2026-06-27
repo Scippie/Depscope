@@ -23,7 +23,7 @@ This project started as a personal tool to help me keep my own projects up to da
 
 ## Screenshot
 
-A main-window screenshot will be added at `docs/screenshots/depscope-main.png`.
+![DepScope main window](docs/screenshots/depscope-main.png)
 
 ## Features
 
