@@ -19,6 +19,10 @@ DepScope is local-first: project files are read from your machine, source code i
 [![Release](https://github.com/Scippie/DepScope/actions/workflows/release.yml/badge.svg)](https://github.com/Scippie/DepScope/actions/workflows/release.yml)
 [![Latest release](https://img.shields.io/github/v/release/Scippie/DepScope)](https://github.com/Scippie/DepScope/releases)
 
+## Screenshot
+
+A main-window screenshot will be added at `docs/screenshots/depscope-main.png`.
+
 ## Features
 
 - **Multi-root scanning**
@@ -99,7 +103,17 @@ On macOS you may also need to allow the app in System Settings because release a
 3. Add more folders with **Open Folder...**; existing scanned roots are kept.
 4. Select a project in the left tree to inspect dependencies.
 5. Use the filter dropdown to focus on outdated packages.
-6. Use **Remove** to stop tracking a selected project. If it is the last project in a root group, that root is removed from saved roots.
+6. Use **Rescan** to immediately refresh saved roots without waiting for the automatic background rescan.
+7. Use **Remove** to stop tracking a selected project. If it is the last project in a root group, that root is removed from saved roots.
+
+Typical workflows:
+
+- Scan one repository to quickly see outdated packages, major updates, and known OSV vulnerabilities.
+- Add several repositories or monorepo roots and let DepScope remember them across sessions.
+- Use **Offline/private mode** when you want local manifest parsing without contacting registries, GitHub, or OSV.
+- Configure registry/source URLs when your projects depend on private or mirrored package sources.
+- Use GitHub Actions scanning to inspect workflow action refs and see whether newer tags or releases are available.
+- Use the vulnerability details below the package grid to inspect advisory IDs, affected package versions, dependency paths, aliases, summaries, and OSV links.
 
 ## Settings
 
@@ -204,6 +218,14 @@ Auto-install uses an external updater handoff so the running DepScope process ca
 
 Tagged release builds run restore, Release build, and tests before publishing platform archives.
 
+GitHub release notes are generated automatically from `CHANGELOG.md`. Before pushing a release tag such as `v1.0.1`, add a matching changelog section:
+
+```markdown
+## [1.0.1] - 2026-...
+```
+
+The release workflow extracts that section and uses it as the GitHub Release description.
+
 ## Contributing
 
 Contributions are welcome.
@@ -219,4 +241,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-DepScope is open source. See [License.txt](./License.txt) for details.
+DepScope is source-available under a non-commercial license. You may use, modify, and share the software for personal, educational, or internal business purposes, but commercial use requires prior written permission from the author. See [License.txt](./License.txt) for details.

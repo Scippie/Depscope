@@ -79,15 +79,43 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: Build release notes from changelog
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NOTES_FILE="release-notes.md"
+
+          {
+            echo "## DepScope ${GITHUB_REF_NAME}"
+            echo
+            awk -v version="$VERSION" '
+              $0 ~ "^## \\[" version "\\]" { found = 1; next }
+              found && /^## \[/ { exit }
+              found { print }
+            ' CHANGELOG.md
+          } > "$NOTES_FILE"
+
+          if [ "$(wc -l < "$NOTES_FILE")" -le 2 ]; then
+            {
+              echo "## DepScope ${GITHUB_REF_NAME}"
+              echo
+              echo "No matching CHANGELOG.md section was found for ${GITHUB_REF_NAME}."
+            } > "$NOTES_FILE"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          body_path: release-notes.md
           files: |
             artifacts/**/DepScope-*.zip
             artifacts/**/DepScope-*.zip.sha256

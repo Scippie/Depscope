@@ -48,10 +48,20 @@ Guidelines:
 - Run the automated test suite before committing or opening a PR:
   - `dotnet test`
 - For scanner changes, also run DepScope against at least one real local repository.
+- Do not include secrets, credentials, tokens, certificates, private registry URLs with credentials, or private project data in issues, commits, screenshots, or logs.
 - Follow existing code style:
   - C# 10 / .NET 8
   - Use `async`/`await` and cancellation tokens where appropriate.
   - Keep ecosystem handlers robust (catch network/parse errors and degrade gracefully).
+
+By submitting a pull request, you agree that your contribution is provided under the same non-commercial license used by this repository.
+
+Maintainer review notes:
+
+- Pull requests from forks should be reviewed before running contributed code locally.
+- CI results are useful, but they do not replace code review.
+- Changes that affect update installation, release workflows, file-system access, registry URLs, vulnerability lookups, or process execution should receive extra scrutiny.
+- New dependencies should be discussed before they are added.
 
 ---
 
