@@ -1,0 +1,95 @@
+name: Build DepScope Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore DepScope.sln
+
+      - name: Build
+        run: dotnet build DepScope.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test DepScope.sln --configuration Release --no-build
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rid: [win-x64, linux-x64, osx-x64, osx-arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish ${{ matrix.rid }}
+        run: |
+          dotnet publish DepScope.Desktop/DepScope.Desktop.csproj \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -o publish/${{ matrix.rid }}
+
+      - name: Archive ${{ matrix.rid }}
+        run: |
+          cd publish
+          zip -r ../DepScope-${{ matrix.rid }}.zip ${{ matrix.rid }}
+          cd ..
+          sha256sum DepScope-${{ matrix.rid }}.zip > DepScope-${{ matrix.rid }}.zip.sha256
+
+      - name: Upload artifact ${{ matrix.rid }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: DepScope-${{ matrix.rid }}
+          path: |
+            DepScope-${{ matrix.rid }}.zip
+            DepScope-${{ matrix.rid }}.zip.sha256
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            artifacts/**/DepScope-*.zip
+            artifacts/**/DepScope-*.zip.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

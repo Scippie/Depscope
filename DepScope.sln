@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DepScope.Core", "DepScope.Core\DepScope.Core.csproj", "{7C1B8F76-BCAA-49C0-A59B-9E4EFFAA7BDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DepScope.Desktop", "DepScope.Desktop\DepScope.Desktop.csproj", "{C4EFA80C-E54F-4A98-AA30-43AE31DC4C67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DepScope.Tests", "DepScope.Tests\DepScope.Tests.csproj", "{09F3F7E1-AC3A-49C3-A7EF-BC9058727638}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		CHANGELOG.md = CHANGELOG.md
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+		CONTRIBUTING.md = CONTRIBUTING.md
+		License.txt = License.txt
+		README.md = README.md
+		.github\workflows\release.yml = .github\workflows\release.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C1B8F76-BCAA-49C0-A59B-9E4EFFAA7BDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C1B8F76-BCAA-49C0-A59B-9E4EFFAA7BDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C1B8F76-BCAA-49C0-A59B-9E4EFFAA7BDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C1B8F76-BCAA-49C0-A59B-9E4EFFAA7BDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4EFA80C-E54F-4A98-AA30-43AE31DC4C67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4EFA80C-E54F-4A98-AA30-43AE31DC4C67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4EFA80C-E54F-4A98-AA30-43AE31DC4C67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4EFA80C-E54F-4A98-AA30-43AE31DC4C67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09F3F7E1-AC3A-49C3-A7EF-BC9058727638}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09F3F7E1-AC3A-49C3-A7EF-BC9058727638}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09F3F7E1-AC3A-49C3-A7EF-BC9058727638}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09F3F7E1-AC3A-49C3-A7EF-BC9058727638}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E1AE854D-9B02-4B47-81C3-279E31DB9687}
+	EndGlobalSection
+EndGlobal

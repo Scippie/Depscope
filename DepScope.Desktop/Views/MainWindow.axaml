@@ -1,0 +1,498 @@
+﻿<Window
+x:Class="DepScope.Desktop.Views.MainWindow"
+xmlns="https://github.com/avaloniaui"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+xmlns:conv="clr-namespace:DepScope.Desktop.Converters"
+xmlns:vm="clr-namespace:DepScope.Desktop.ViewModels"
+xmlns:models="clr-namespace:DepScope.Core.Models;assembly=DepScope.Core"
+xmlns:flyout="clr-namespace:Avalonia.Controls.Primitives;assembly=Avalonia.Controls"
+Icon="/Assets/DepScope_img.png"
+Width="1500"
+Height="800"
+Title="DepScope"
+x:DataType="vm:MainWindowViewModel"
+x:CompileBindings="True">
+
+	<Window.Resources>
+		<conv:UpdateTypeToBrushConverter x:Key="UpdateTypeToBrush" />
+		<conv:VulnerabilitySeverityToBrushConverter x:Key="VulnerabilitySeverityToBrush" />
+		<conv:VulnerabilitySeverityToIconConverter x:Key="VulnerabilitySeverityToIcon" />
+		<conv:EcosystemToLabelConverter x:Key="EcosystemToLabel" />
+		<conv:ProjectStatusToBrushConverter x:Key="ProjectStatusToBrush" />
+		<Flyout x:Key="SettingsFlyout"
+				x:DataType="vm:MainWindowViewModel">
+			<ScrollViewer MaxHeight="700">
+			<StackPanel Margin="10" Spacing="6">
+				<CheckBox Content="Dark mode"
+						  IsChecked="{Binding IsDarkMode}" />
+				<CheckBox Content="Offline/private mode"
+						  IsChecked="{Binding OfflineMode}" />
+				<TextBlock Text="NuGet v3 source"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding NuGetSourceUrl}"
+						 PlaceholderText="https://api.nuget.org/v3/index.json" />
+				<TextBlock Text="npm registry"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding NpmRegistryBaseUrl}"
+						 PlaceholderText="https://registry.npmjs.org/" />
+				<TextBlock Text="Go proxy"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding GoProxyBaseUrl}"
+						 PlaceholderText="https://proxy.golang.org/" />
+				<TextBlock Text="Python package index"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding PythonPackageIndexBaseUrl}"
+						 PlaceholderText="https://pypi.org/pypi/" />
+				<TextBlock Text="Packagist metadata"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding PackagistMetadataBaseUrl}"
+						 PlaceholderText="https://repo.packagist.org/p2/" />
+				<TextBlock Text="Maven search API"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding MavenSearchBaseUrl}"
+						 PlaceholderText="https://search.maven.org/solrsearch/select" />
+				<TextBlock Text="crates.io API"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding CratesApiBaseUrl}"
+						 PlaceholderText="https://crates.io/api/v1/" />
+				<TextBlock Text="GitHub API"
+						   FontSize="11"
+						   Foreground="#9CA3AF" />
+				<TextBox Text="{Binding GitHubApiBaseUrl}"
+						 PlaceholderText="https://api.github.com/" />
+				<CheckBox Content="Start with system"
+						  IsChecked="{Binding StartWithSystem}" />
+				<CheckBox Content="Use system tray / close to tray"
+						  IsChecked="{Binding UseSystemTray}" />
+				<CheckBox Content="Auto-rescan"
+						  IsChecked="{Binding AutoRescan}" />
+				<CheckBox Content="Check for updates on start"
+						  IsChecked="{Binding CheckUpdatesOnStart}" />
+				<CheckBox Content="Auto-download updates"
+						  IsChecked="{Binding AutoDownloadUpdates}" />
+				<Button Content="Check updates"
+						Click="OnCheckUpdatesClick"/>
+				<CheckBox Content="Show notifications after scan"
+						  IsChecked="{Binding EnableNotifications}" />
+			</StackPanel>
+			</ScrollViewer>
+		</Flyout>
+	</Window.Resources>
+	<Grid RowDefinitions="Auto,*"
+		  ColumnDefinitions="*">
+
+		<!-- TOP BAR -->
+		<DockPanel Grid.Row="0" Margin="10">
+			<!-- Right: settings -->
+			<StackPanel DockPanel.Dock="Right"
+						Orientation="Horizontal"
+						Spacing="8">
+				<Button Content="Settings"
+						VerticalAlignment="Center"
+						flyout:FlyoutBase.AttachedFlyout="{StaticResource SettingsFlyout}"
+						Click="OnSettingsButtonClick" />
+			</StackPanel>
+
+			<!-- Left: title + open folder + status -->
+			<StackPanel DockPanel.Dock="Left"
+						Orientation="Horizontal"
+						Spacing="8">
+				<TextBlock Text="DepScope"
+						   FontSize="20"
+						   FontWeight="Bold"
+						   VerticalAlignment="Center" />
+				<TextBlock Text="{Binding AppVersion}"
+						   FontSize="11"
+						   Foreground="#9CA3AF"
+						   VerticalAlignment="Center"
+						   Margin="4,0,0,0" />
+
+				<Button Content="Open Folder..."
+						Click="OnOpenFolderClick"
+						Margin="10,0,0,0" />
+
+				<Button Content="Rescan"
+						Click="OnRescanClick"
+						Margin="4,0,0,0" />
+
+				<TextBlock Text="{Binding StatusMessage}"
+						   VerticalAlignment="Center"
+						   Margin="10,0,0,0" />
+				<ProgressBar Width="80"
+							 Height="8"
+							 Margin="10,0,0,0"
+							 IsIndeterminate="True"
+							 IsVisible="{Binding IsScanning}"
+							 VerticalAlignment="Center" />
+			</StackPanel>
+		</DockPanel>
+
+		<!-- Main content -->
+		<Grid Grid.Row="1"
+			  Margin="10">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="2*" />
+				<ColumnDefinition Width="5*" />
+			</Grid.ColumnDefinitions>
+
+			<!-- Projects panel -->
+			<Border Grid.Column="0"
+					Margin="0,0,5,0"
+					BorderBrush="Gray"
+					BorderThickness="1">
+				<Grid Margin="5"
+					  RowDefinitions="Auto,Auto,*">
+					<DockPanel Grid.Row="0"
+							   LastChildFill="False"
+							   MinHeight="32">
+						<TextBlock Text="Projects"
+								   FontWeight="Bold"
+								   VerticalAlignment="Center"
+								   DockPanel.Dock="Left" />
+
+						<Button Content="Remove"
+								Click="OnRemoveProjectClick"
+								HorizontalAlignment="Right"
+								VerticalAlignment="Center"
+								DockPanel.Dock="Right"
+								FontSize="12" />
+					</DockPanel>
+
+					<WrapPanel Grid.Row="1"
+							   Margin="0,4,0,0">
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#22C55E"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Clean"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#F97316"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Updates"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#EF4444"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Vulnerable"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#9CA3AF"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Unknown"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+					</WrapPanel>
+
+					<!-- TreeView: ProjectGroup (root) → ProjectInfo (child) -->
+					<ScrollViewer Grid.Row="2"
+								  Margin="0,1,0,0">
+						<TreeView ItemsSource="{Binding ProjectGroups}"
+								  SelectedItem="{Binding SelectedTreeItem, Mode=TwoWay}">
+							<!-- optional: expand all groups by default -->
+							<TreeView.Styles>
+								<Style Selector="TreeViewItem">
+									<Setter Property="IsExpanded" Value="True" />
+								</Style>
+							</TreeView.Styles>
+
+							<TreeView.DataTemplates>
+								<!-- Root nodes: ProjectGroup, children from Projects -->
+								<TreeDataTemplate DataType="vm:ProjectGroup"
+												  x:DataType="vm:ProjectGroup"
+												  ItemsSource="{Binding Projects}">
+									<TextBlock Text="{Binding Name}"
+											   FontWeight="Bold" />
+								</TreeDataTemplate>
+
+								<!-- Child nodes: ProjectInfo -->
+								<DataTemplate DataType="models:ProjectInfo"
+											  x:DataType="models:ProjectInfo">
+									<StackPanel Orientation="Horizontal" Spacing="6">
+										<!-- status dot -->
+										<Border Width="10"
+												Height="10"
+												CornerRadius="5"
+												Margin="0,2,0,0"
+												Background="{Binding ., Converter={StaticResource ProjectStatusToBrush}}" />
+
+										<!-- text -->
+										<StackPanel Spacing="2">
+											<TextBlock Text="{Binding Name}"
+													   FontWeight="SemiBold"
+													   Foreground="{Binding ., Converter={StaticResource ProjectStatusToBrush}}" />
+											<TextBlock Text="{Binding Ecosystem, Converter={StaticResource EcosystemToLabel}}"
+													   FontSize="11"
+													   Foreground="#9CA3AF" />
+										</StackPanel>
+									</StackPanel>
+								</DataTemplate>
+							</TreeView.DataTemplates>
+						</TreeView>
+					</ScrollViewer>
+				</Grid>
+			</Border>
+
+
+
+			<!-- Packages panel -->
+			<Border Grid.Column="1"
+					Margin="5,0,0,0"
+					BorderBrush="Gray"
+					BorderThickness="1">
+				<Grid Margin="5"
+					  RowDefinitions="Auto,Auto,*,Auto">
+					<!-- Header + filter on one line -->
+					<DockPanel Grid.Row="0"
+							   LastChildFill="False">
+						<TextBlock Text="Packages"
+								   FontWeight="Bold"
+								   DockPanel.Dock="Left" />
+
+						<StackPanel Orientation="Horizontal"
+									DockPanel.Dock="Right"
+									Spacing="4">
+							<TextBlock Text="Filter:"
+									   VerticalAlignment="Center" />
+							<ComboBox ItemsSource="{Binding AvailableFilters}"
+									  SelectedItem="{Binding SelectedFilter}"
+									  Width="150">
+								<ComboBox.ItemTemplate>
+									<DataTemplate x:CompileBindings="False">
+										<TextBlock Text="{Binding}" />
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+						</StackPanel>
+					</DockPanel>
+
+					<WrapPanel Grid.Row="1"
+							   Margin="0,4,0,0">
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#22C55E"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Current"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#F59E0B"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Patch"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#F97316"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Minor"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#EF4444"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Major"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="9"
+									Height="9"
+									CornerRadius="5"
+									Background="#6B7280"
+									VerticalAlignment="Center" />
+							<TextBlock Text="Unknown"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+						<StackPanel Orientation="Horizontal"
+									Spacing="4"
+									Margin="0,0,12,2">
+							<Border Width="18"
+									Height="16"
+									CornerRadius="4"
+									BorderThickness="1"
+									BorderBrush="#EF4444"
+									VerticalAlignment="Center">
+								<TextBlock Text="!"
+										   FontSize="10"
+										   FontWeight="Bold"
+										   Foreground="#EF4444"
+										   HorizontalAlignment="Center"
+										   VerticalAlignment="Center" />
+							</Border>
+							<TextBlock Text="Vulnerability"
+									   FontSize="11"
+									   Foreground="#9CA3AF" />
+						</StackPanel>
+					</WrapPanel>
+
+					<!-- DataGrid with auto columns for now -->
+					<controls:DataGrid
+					x:CompileBindings="False"
+					Grid.Row="2"
+					ItemsSource="{Binding FilteredPackages}"
+					SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
+					AutoGenerateColumns="False"
+					IsReadOnly="True"
+					GridLinesVisibility="All"
+					BorderThickness="1"
+					BorderBrush="Gray"
+					Margin="0,5,0,0"
+					HorizontalScrollBarVisibility="Auto"
+					DoubleTapped="PackagesGrid_DoubleTapped">
+
+						<controls:DataGrid.Columns>
+							<controls:DataGridTextColumn Header="Package"
+														 Binding="{Binding PackageName}"
+														 Width="2*"
+														 MinWidth="180" />
+							<controls:DataGridTextColumn Header="Declared"
+														 Binding="{Binding DeclaredVersion}"
+														 Width="*"
+														 MinWidth="95" />
+							<controls:DataGridTextColumn Header="Installed"
+														 Binding="{Binding InstalledVersion}"
+														 Width="*"
+														 MinWidth="95" />
+							<controls:DataGridTextColumn Header="Latest"
+														 Binding="{Binding LatestVersion}"
+														 Width="*"
+														 MinWidth="95" />
+
+							<controls:DataGridTemplateColumn Header="Vulnerabilities"
+															 Width="150"
+															 MinWidth="135">
+								<controls:DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Border Padding="4"
+												CornerRadius="4"
+												HorizontalAlignment="Center"
+												BorderThickness="1"
+												BorderBrush="{Binding VulnerabilitySeverity, Converter={StaticResource VulnerabilitySeverityToBrush}}">
+											<StackPanel Orientation="Horizontal"
+														Spacing="5"
+														HorizontalAlignment="Center">
+												<TextBlock Text="{Binding VulnerabilitySeverity, Converter={StaticResource VulnerabilitySeverityToIcon}}"
+														   FontWeight="Bold"
+														   Foreground="{Binding VulnerabilitySeverity, Converter={StaticResource VulnerabilitySeverityToBrush}}"
+														   HorizontalAlignment="Center" />
+												<TextBlock Text="{Binding VulnerabilityStatus}"
+														   HorizontalAlignment="Center" />
+											</StackPanel>
+										</Border>
+									</DataTemplate>
+								</controls:DataGridTemplateColumn.CellTemplate>
+							</controls:DataGridTemplateColumn>
+
+							<controls:DataGridTemplateColumn Header="Update"
+															 Width="95"
+															 MinWidth="85">
+								<controls:DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Border Padding="4"
+												CornerRadius="4"
+												HorizontalAlignment="Center"
+												Background="{Binding UpdateType, Converter={StaticResource UpdateTypeToBrush}}">
+											<TextBlock Text="{Binding UpdateType}"
+													   HorizontalAlignment="Center" />
+										</Border>
+									</DataTemplate>
+								</controls:DataGridTemplateColumn.CellTemplate>
+							</controls:DataGridTemplateColumn>
+						</controls:DataGrid.Columns>
+					</controls:DataGrid>
+
+					<Border Grid.Row="3"
+							IsVisible="{Binding HasSelectedVulnerabilityAdvisories}"
+							BorderBrush="#4B5563"
+							BorderThickness="1"
+							Margin="0,6,0,0"
+							Padding="6">
+						<Grid ColumnDefinitions="Auto,*"
+							  ColumnSpacing="8">
+							<TextBlock Grid.Column="0"
+									   Text="Advisories"
+									   FontWeight="SemiBold"
+									   VerticalAlignment="Top" />
+							<TextBox Grid.Column="1"
+									 Text="{Binding SelectedVulnerabilityAdvisories}"
+									 IsReadOnly="True"
+									 TextWrapping="Wrap"
+									 BorderThickness="0"
+									 Background="Transparent" />
+						</Grid>
+					</Border>
+				</Grid>
+			</Border>
+		</Grid>
+	</Grid>
+</Window>
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,86 @@
+DepScope Non-Commercial License v1.0
+====================================
+
+Copyright (c) 2026 Scippie
+
+1. Definitions
+--------------
+
+"Software" means the source code, binary executables, and related files
+for the project known as "DepScope".
+
+"You" (or "Your") means an individual or legal entity using the Software.
+
+
+2. Grant of Rights
+------------------
+
+Subject to the terms of this License, You are hereby granted a worldwide,
+royalty-free, non-exclusive, non-transferable license to:
+
+  - Use the Software for personal, educational, or internal business purposes.
+  - Modify the Software for your own use.
+  - Distribute unmodified or modified copies of the Software to others,
+    provided that:
+      - this License text is included in full, and
+      - the Software is not used for Commercial Purposes (see section 3).
+
+
+3. Non-Commercial Use
+---------------------
+
+"Commercial Purposes" means any use of the Software:
+
+  - as part of a product or service that is sold, licensed, rented,
+    or otherwise provided in exchange for payment or other consideration;
+  - in support of a commercial SaaS offering;
+  - in a for-profit environment where the Software itself is a key part
+    of a product or service offered to customers or third parties.
+
+You may NOT use the Software for Commercial Purposes without
+prior written permission from the Author.
+
+
+4. No Trademark Rights
+----------------------
+
+This License does not grant permission to use the name "DepScope" or the
+name of the Author in advertising or otherwise to promote any fork,
+distribution, or derivative work without explicit written permission.
+
+
+5. Disclaimer of Warranty
+-------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL
+THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+6. Limitation of Liability
+--------------------------
+
+To the maximum extent permitted by applicable law, in no event shall the
+Author be liable for any special, incidental, indirect, or consequential
+damages whatsoever arising out of the use of or inability to use the
+Software, even if the Author has been advised of the possibility of such
+damages.
+
+
+7. Termination
+--------------
+
+If You breach any of the terms of this License, Your rights under this
+License will terminate automatically. Upon termination, You must cease
+all use and distribution of the Software.
+
+
+8. Miscellaneous
+----------------
+
+This License shall be governed by and construed in accordance with the
+laws applicable in the jurisdiction of the Author, excluding its conflict
+of law provisions.
