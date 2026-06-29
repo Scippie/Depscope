@@ -233,6 +233,26 @@ public partial class MainWindow : Window
         await _vm.RemoveSelectedProjectAsync();
     }
 
+    private void OnSuppressPackageUpdateClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _vm.SuppressSelectedPackageUpdate();
+    }
+
+    private void OnClearPackageUpdateSuppressionClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _vm.ClearSelectedPackageUpdateSuppression();
+    }
+
+    private void OnSuppressPackageAdvisoriesClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _vm.SuppressSelectedPackageAdvisories();
+    }
+
+    private void OnClearPackageAdvisorySuppressionsClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _vm.ClearSelectedPackageAdvisorySuppressions();
+    }
+
     private async void OnCheckUpdatesClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (_vm.OfflineMode)

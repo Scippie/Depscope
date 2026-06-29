@@ -50,6 +50,7 @@ This project started as a personal tool to help me keep my own projects up to da
   - Update types: `None`, `Patch`, `Minor`, `Major`, `Unknown`.
   - Vulnerability status shows the highest known severity and advisory count when a package/version is matched.
   - Selected-package detail panel with package metadata, related security package counts, and structured advisory details.
+  - Local per-project accepted-risk rules for selected package updates and advisories.
   - Filters: `All`, `Outdated`, `Major only`, `Minor+Major`.
   - Large project lists and package tables scroll inside the window.
 
@@ -125,6 +126,7 @@ Typical workflows:
 - Use GitHub Actions scanning to inspect workflow action refs and see whether newer tags or releases are available.
 - Select a package to inspect declared/installed/latest versions, related security packages, advisory IDs, affected package versions, dependency paths, aliases, summaries, and OSV links.
 - Use the update-first advisor to prioritize critical/high vulnerabilities, then other vulnerable packages, normal updates, and unresolved checks.
+- Accept selected package update or advisory alerts when you intentionally defer or accept that risk for a project; accepted items remain visible and can be restored.
 - Export an HTML report when you need to share or archive the current dependency and vulnerability status.
 
 ## Settings
@@ -150,6 +152,7 @@ The Settings flyout includes:
 - Show notifications after scan.
 
 Settings are stored per user in the operating system application-data folder.
+Accepted-risk rules are also stored per user and apply to the matching project path, ecosystem, and package/advisory.
 
 Verified updates are installed per user:
 

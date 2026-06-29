@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Added a compact project risk summary with project, package, update, vulnerability, and severity counts.
 - Added an update priority advisor that highlights the top packages to review first.
 - Added a structured selected-package detail panel with package metadata, related security package counts, and advisory details.
+- Added local per-project accepted-risk rules for selected package updates and advisories.
 
 ### Fixed
 - Aligned project status indicators with unresolved/unknown checks so unknown projects are not shown as clean.

@@ -1,4 +1,5 @@
 using DepScope.Core.Models;
+using DepScope.Desktop.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,10 +47,12 @@ public sealed class UpdateRecommendation
 
     public static IReadOnlyList<UpdateRecommendation> FromProjects(
         IEnumerable<ProjectInfo> projects,
+        IReadOnlyCollection<SuppressionRule>? suppressionRules = null,
         int maxItems = 5)
     {
+        var rules = suppressionRules ?? Array.Empty<SuppressionRule>();
         return projects
-            .SelectMany(CreateForProject)
+            .SelectMany(project => CreateForProject(project, rules))
             .OrderBy(recommendation => recommendation.Priority)
             .ThenBy(recommendation => recommendation.ProjectName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(recommendation => recommendation.PackageName, StringComparer.OrdinalIgnoreCase)
@@ -57,11 +60,22 @@ public sealed class UpdateRecommendation
             .ToList();
     }
 
-    private static IEnumerable<UpdateRecommendation> CreateForProject(ProjectInfo project)
+    private static IEnumerable<UpdateRecommendation> CreateForProject(
+        ProjectInfo project,
+        IReadOnlyCollection<SuppressionRule> suppressionRules)
     {
         foreach (var package in project.Packages)
         {
-            var priority = GetPriority(package);
+            var isUpdateSuppressed = SuppressionRules.IsPackageUpdateSuppressed(
+                suppressionRules,
+                project,
+                package);
+            var areAdvisoriesSuppressed = SuppressionRules.AreAllAdvisoriesSuppressed(
+                suppressionRules,
+                project,
+                package);
+
+            var priority = GetPriority(package, isUpdateSuppressed, areAdvisoriesSuppressed);
             if (priority is null)
                 continue;
 
@@ -76,15 +90,18 @@ public sealed class UpdateRecommendation
                 UpdateType = package.UpdateType,
                 VulnerabilitySeverity = package.VulnerabilitySeverity,
                 VulnerabilityStatus = package.VulnerabilityStatus,
-                Reason = CreateReason(package),
+                Reason = CreateReason(package, isUpdateSuppressed, areAdvisoriesSuppressed),
                 Priority = priority.Value
             };
         }
     }
 
-    private static int? GetPriority(PackageRef package)
+    private static int? GetPriority(
+        PackageRef package,
+        bool isUpdateSuppressed,
+        bool areAdvisoriesSuppressed)
     {
-        if (IsVulnerable(package))
+        if (IsVulnerable(package) && !areAdvisoriesSuppressed)
         {
             return package.VulnerabilitySeverity switch
             {
@@ -96,6 +113,9 @@ public sealed class UpdateRecommendation
             };
         }
 
+        if (isUpdateSuppressed)
+            return null;
+
         return package.UpdateType switch
         {
             VersionUpdateType.Major => 50,
@@ -106,11 +126,14 @@ public sealed class UpdateRecommendation
         };
     }
 
-    private static string CreateReason(PackageRef package)
+    private static string CreateReason(
+        PackageRef package,
+        bool isUpdateSuppressed,
+        bool areAdvisoriesSuppressed)
     {
-        if (IsVulnerable(package))
+        if (IsVulnerable(package) && !areAdvisoriesSuppressed)
         {
-            var updateSuffix = IsOutdated(package)
+            var updateSuffix = IsOutdated(package) && !isUpdateSuppressed
                 ? " and an update is available"
                 : string.Empty;
             return $"{package.VulnerabilitySeverity} vulnerability{updateSuffix}";

@@ -25,5 +25,6 @@ namespace DepScope.Desktop.Settings
         public bool CheckUpdatesOnStart { get; set; } = false;
         public bool AutoDownloadUpdates { get; set; } = false;
         public bool EnableNotifications { get; set; } = true;
+        public List<SuppressionRule> SuppressionRules { get; set; } = new();
     }
 }

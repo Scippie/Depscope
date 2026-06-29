@@ -146,7 +146,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (!Equals(value, _selectedPackage))
             {
                 _selectedPackage = value;
-                SelectedPackageDetail = PackageDetail.FromPackage(value);
+                RefreshSelectedPackageDetail();
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(HasSelectedVulnerabilityAdvisories));
                 OnPropertyChanged(nameof(SelectedVulnerabilityAdvisories));
@@ -180,6 +180,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             : SelectedPackage.VulnerabilityAdvisories.Count > 0
                 ? string.Join(Environment.NewLine, SelectedPackage.VulnerabilityAdvisories.Select(a => a.DisplayText))
                 : SelectedPackage.VulnerabilityIds ?? string.Empty;
+
+    public bool CanSuppressSelectedPackageUpdate =>
+        SelectedProject is not null &&
+        SelectedPackage is not null &&
+        (SelectedPackage.UpdateType is VersionUpdateType.Patch or VersionUpdateType.Minor or VersionUpdateType.Major) &&
+        !SuppressionRules.IsPackageUpdateSuppressed(_settings.SuppressionRules, SelectedProject, SelectedPackage);
+
+    public bool CanClearSelectedPackageUpdateSuppression =>
+        SelectedProject is not null &&
+        SelectedPackage is not null &&
+        SuppressionRules.IsPackageUpdateSuppressed(_settings.SuppressionRules, SelectedProject, SelectedPackage);
+
+    public bool CanSuppressSelectedPackageAdvisories =>
+        SelectedProject is not null &&
+        SelectedPackage is not null &&
+        SuppressionRules.GetAdvisoryIds(SelectedPackage).Any(id =>
+            !SuppressionRules.IsAdvisorySuppressed(_settings.SuppressionRules, SelectedProject, SelectedPackage, id));
+
+    public bool CanClearSelectedPackageAdvisorySuppressions =>
+        SelectedProject is not null &&
+        SelectedPackage is not null &&
+        SuppressionRules.GetAdvisoryIds(SelectedPackage).Any(id =>
+            SuppressionRules.IsAdvisorySuppressed(_settings.SuppressionRules, SelectedProject, SelectedPackage, id));
 
     private object? _selectedTreeItem;
     public object? SelectedTreeItem
@@ -446,6 +469,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             {
                 var json = File.ReadAllText(_settingsPath);
                 _settings = JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                _settings.SuppressionRules ??= new List<SuppressionRule>();
             }
             else
             {
@@ -848,6 +872,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
             UpdateOutdatedSummaryAndNotify();
             RefreshWorkspaceRiskSummary();
+            RefreshSelectedPackageDetail();
             OnPropertyChanged(nameof(ProjectGroups));
             OnPropertyChanged(nameof(Projects));
             OnPropertyChanged(nameof(FilteredPackages));
@@ -879,6 +904,85 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         StatusMessage = "Exporting HTML report...";
         await HtmlReportService.WriteReportAsync(ProjectGroups, filePath, ct);
         StatusMessage = $"Exported HTML report to {Path.GetFileName(filePath)}.";
+    }
+
+    public void SuppressSelectedPackageUpdate()
+    {
+        if (SelectedProject is null ||
+            SelectedPackage is null ||
+            !CanSuppressSelectedPackageUpdate)
+        {
+            return;
+        }
+
+        _settings.SuppressionRules.Add(CreatePackageUpdateSuppression(SelectedProject, SelectedPackage));
+        SaveSettings();
+        RefreshSuppressionDerivedState();
+        StatusMessage = $"Accepted update for {SelectedPackage.PackageName}.";
+    }
+
+    public void ClearSelectedPackageUpdateSuppression()
+    {
+        if (SelectedProject is null || SelectedPackage is null)
+            return;
+
+        var removed = _settings.SuppressionRules.RemoveAll(rule =>
+            rule.Type == SuppressionRuleType.PackageUpdate &&
+            string.Equals(rule.ProjectPath, SelectedProject.Path, StringComparison.OrdinalIgnoreCase) &&
+            rule.Ecosystem == SelectedPackage.Ecosystem &&
+            string.Equals(rule.PackageName, SelectedPackage.PackageName, StringComparison.OrdinalIgnoreCase));
+
+        if (removed == 0)
+            return;
+
+        SaveSettings();
+        RefreshSuppressionDerivedState();
+        StatusMessage = $"Restored update alert for {SelectedPackage.PackageName}.";
+    }
+
+    public void SuppressSelectedPackageAdvisories()
+    {
+        if (SelectedProject is null || SelectedPackage is null)
+            return;
+
+        var advisoryIds = SuppressionRules.GetAdvisoryIds(SelectedPackage)
+            .Where(id => !SuppressionRules.IsAdvisorySuppressed(
+                _settings.SuppressionRules,
+                SelectedProject,
+                SelectedPackage,
+                id))
+            .ToList();
+
+        if (advisoryIds.Count == 0)
+            return;
+
+        foreach (var advisoryId in advisoryIds)
+            _settings.SuppressionRules.Add(CreateAdvisorySuppression(SelectedProject, SelectedPackage, advisoryId));
+
+        SaveSettings();
+        RefreshSuppressionDerivedState();
+        StatusMessage = $"Accepted {advisoryIds.Count} advisory alert(s) for {SelectedPackage.PackageName}.";
+    }
+
+    public void ClearSelectedPackageAdvisorySuppressions()
+    {
+        if (SelectedProject is null || SelectedPackage is null)
+            return;
+
+        var advisoryIds = SuppressionRules.GetAdvisoryIds(SelectedPackage);
+        var removed = _settings.SuppressionRules.RemoveAll(rule =>
+            rule.Type == SuppressionRuleType.Advisory &&
+            string.Equals(rule.ProjectPath, SelectedProject.Path, StringComparison.OrdinalIgnoreCase) &&
+            rule.Ecosystem == SelectedPackage.Ecosystem &&
+            string.Equals(rule.PackageName, SelectedPackage.PackageName, StringComparison.OrdinalIgnoreCase) &&
+            advisoryIds.Contains(rule.AdvisoryId, StringComparer.OrdinalIgnoreCase));
+
+        if (removed == 0)
+            return;
+
+        SaveSettings();
+        RefreshSuppressionDerivedState();
+        StatusMessage = $"Restored advisory alerts for {SelectedPackage.PackageName}.";
     }
 
     private async Task<ProjectGroup?> BuildProjectGroupAsync(
@@ -976,10 +1080,60 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void RefreshUpdateRecommendations()
     {
         UpdateRecommendations.Clear();
-        foreach (var recommendation in UpdateRecommendation.FromProjects(Projects))
+        foreach (var recommendation in UpdateRecommendation.FromProjects(Projects, _settings.SuppressionRules))
             UpdateRecommendations.Add(recommendation);
 
         OnPropertyChanged(nameof(HasUpdateRecommendations));
+    }
+
+    private void RefreshSelectedPackageDetail()
+    {
+        SelectedPackageDetail = PackageDetail.FromPackage(
+            SelectedProject,
+            SelectedPackage,
+            _settings.SuppressionRules);
+        OnPropertyChanged(nameof(CanSuppressSelectedPackageUpdate));
+        OnPropertyChanged(nameof(CanClearSelectedPackageUpdateSuppression));
+        OnPropertyChanged(nameof(CanSuppressSelectedPackageAdvisories));
+        OnPropertyChanged(nameof(CanClearSelectedPackageAdvisorySuppressions));
+    }
+
+    private void RefreshSuppressionDerivedState()
+    {
+        RefreshSelectedPackageDetail();
+        RefreshUpdateRecommendations();
+    }
+
+    private static SuppressionRule CreatePackageUpdateSuppression(
+        ProjectInfo project,
+        PackageRef package)
+    {
+        return new SuppressionRule
+        {
+            Type = SuppressionRuleType.PackageUpdate,
+            ProjectPath = project.Path,
+            Ecosystem = package.Ecosystem,
+            PackageName = package.PackageName,
+            Reason = "Accepted package update",
+            CreatedAt = DateTimeOffset.Now
+        };
+    }
+
+    private static SuppressionRule CreateAdvisorySuppression(
+        ProjectInfo project,
+        PackageRef package,
+        string advisoryId)
+    {
+        return new SuppressionRule
+        {
+            Type = SuppressionRuleType.Advisory,
+            ProjectPath = project.Path,
+            Ecosystem = package.Ecosystem,
+            PackageName = package.PackageName,
+            AdvisoryId = advisoryId,
+            Reason = "Accepted advisory",
+            CreatedAt = DateTimeOffset.Now
+        };
     }
 
     private void UpdateOutdatedSummaryAndNotify(bool force = false)

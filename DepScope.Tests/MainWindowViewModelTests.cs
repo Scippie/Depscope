@@ -237,6 +237,109 @@ public sealed class MainWindowViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task SuppressSelectedPackageUpdate_PersistsRuleAndRemovesAdvisorItem()
+    {
+        var handler = new FakeHandler(new ProjectInfo
+        {
+            Name = "ProjectA",
+            Path = Path.Combine(_rootPath, "ProjectA", "ProjectA.csproj"),
+            Ecosystem = Ecosystem.DotNet,
+            Packages =
+            {
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.DotNet,
+                    PackageName = "Package.A",
+                    DeclaredVersion = "1.0.0",
+                    LatestVersion = "2.0.0",
+                    UpdateType = VersionUpdateType.Major,
+                    VulnerabilitySeverity = VulnerabilitySeverity.None
+                }
+            }
+        });
+        var viewModel = CreateViewModel(handler);
+        viewModel.OfflineMode = true;
+        await viewModel.ScanFolderAsync(
+            _rootPath,
+            append: true,
+            TestContext.Current.CancellationToken);
+        viewModel.SelectedPackage = viewModel.SelectedProject!.Packages.Single();
+
+        Assert.Single(viewModel.UpdateRecommendations);
+
+        viewModel.SuppressSelectedPackageUpdate();
+
+        Assert.Empty(viewModel.UpdateRecommendations);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        Assert.True(viewModel.SelectedPackageDetail.IsUpdateSuppressed);
+        Assert.Equal("Update accepted", viewModel.SelectedPackageDetail.SuppressionStatus);
+
+        var settingsJson = await File.ReadAllTextAsync(
+            _settingsPath,
+            TestContext.Current.CancellationToken);
+        Assert.Contains("\"PackageName\": \"Package.A\"", settingsJson);
+        Assert.Contains("\"Reason\": \"Accepted package update\"", settingsJson);
+
+        viewModel.ClearSelectedPackageUpdateSuppression();
+
+        Assert.Single(viewModel.UpdateRecommendations);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        Assert.False(viewModel.SelectedPackageDetail.IsUpdateSuppressed);
+    }
+
+    [Fact]
+    public async Task SuppressSelectedPackageAdvisories_PersistsRulesAndRemovesAdvisorItem()
+    {
+        var handler = new FakeHandler(new ProjectInfo
+        {
+            Name = "ProjectA",
+            Path = Path.Combine(_rootPath, "ProjectA", "package.json"),
+            Ecosystem = Ecosystem.Npm,
+            Packages =
+            {
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.Npm,
+                    PackageName = "vite",
+                    DeclaredVersion = "5.0.0",
+                    UpdateType = VersionUpdateType.None,
+                    VulnerabilitySeverity = VulnerabilitySeverity.High,
+                    VulnerabilityCount = 1,
+                    VulnerabilityIds = "GHSA-test"
+                }
+            }
+        });
+        var viewModel = CreateViewModel(handler);
+        viewModel.OfflineMode = true;
+        await viewModel.ScanFolderAsync(
+            _rootPath,
+            append: true,
+            TestContext.Current.CancellationToken);
+        viewModel.SelectedPackage = viewModel.SelectedProject!.Packages.Single();
+
+        Assert.Single(viewModel.UpdateRecommendations);
+
+        viewModel.SuppressSelectedPackageAdvisories();
+
+        Assert.Empty(viewModel.UpdateRecommendations);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        Assert.True(viewModel.SelectedPackageDetail.HasSuppressedAdvisories);
+        Assert.Equal("Accepted", viewModel.SelectedPackageDetail.Advisories.Single().Status);
+
+        var settingsJson = await File.ReadAllTextAsync(
+            _settingsPath,
+            TestContext.Current.CancellationToken);
+        Assert.Contains("\"PackageName\": \"vite\"", settingsJson);
+        Assert.Contains("\"AdvisoryId\": \"GHSA-test\"", settingsJson);
+
+        viewModel.ClearSelectedPackageAdvisorySuppressions();
+
+        Assert.Single(viewModel.UpdateRecommendations);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        Assert.False(viewModel.SelectedPackageDetail.HasSuppressedAdvisories);
+    }
+
+    [Fact]
     public async Task OfflineMode_SkipsLatestVersionEnrichment()
     {
         var handler = new FakeHandler(new ProjectInfo
