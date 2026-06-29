@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1] - Unreleased
+## [1.0.1] - 2026-26-29
 
 ### Added
 - Added HTML export for current scan results.

@@ -9,7 +9,7 @@ DepScope is local-first: project files are read from your machine, source code i
 
 This project started as a personal tool to help me keep my own projects up to date and easier to review. I developed it for my own workflow, with OpenAI assistance used for parts of the implementation, review, and documentation process. I am publishing it because it may also help other developers monitor dependencies, spot outdated packages, and keep projects safer.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.1-blue)
 ![.NET](https://img.shields.io/badge/.NET-8.0-5C2D91?logo=dotnet)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![Platform](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
