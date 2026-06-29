@@ -42,6 +42,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private ProjectInfo? _selectedProject;
     private PackageRef? _selectedPackage;
+    private PackageDetail? _selectedPackageDetail;
     private string _statusMessage = "Select a folder to scan...";
 
     private bool _isScanning;
@@ -145,12 +146,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (!Equals(value, _selectedPackage))
             {
                 _selectedPackage = value;
+                SelectedPackageDetail = PackageDetail.FromPackage(value);
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(HasSelectedVulnerabilityAdvisories));
                 OnPropertyChanged(nameof(SelectedVulnerabilityAdvisories));
             }
         }
     }
+
+    public PackageDetail? SelectedPackageDetail
+    {
+        get => _selectedPackageDetail;
+        private set
+        {
+            if (!Equals(value, _selectedPackageDetail))
+            {
+                _selectedPackageDetail = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasSelectedPackageDetail));
+            }
+        }
+    }
+
+    public bool HasSelectedPackageDetail => SelectedPackageDetail is not null;
 
     public bool HasSelectedVulnerabilityAdvisories =>
         SelectedPackage?.VulnerabilityAdvisories.Count > 0 ||

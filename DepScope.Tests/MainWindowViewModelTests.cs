@@ -336,6 +336,10 @@ public sealed class MainWindowViewModelTests : IDisposable
         Assert.Equal(
             "GHSA-35jh-r3h4-6jhm, CVE-2021-23337",
             viewModel.SelectedVulnerabilityAdvisories);
+        Assert.True(viewModel.HasSelectedPackageDetail);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        Assert.Equal(2, viewModel.SelectedPackageDetail.Advisories.Count);
+        Assert.Equal("GHSA-35jh-r3h4-6jhm", viewModel.SelectedPackageDetail.Advisories[0].Id);
     }
 
     [Fact]
@@ -367,6 +371,73 @@ public sealed class MainWindowViewModelTests : IDisposable
         Assert.Contains("Affected: transitive-package@1.2.3", viewModel.SelectedVulnerabilityAdvisories);
         Assert.Contains("Via: vite > transitive-package", viewModel.SelectedVulnerabilityAdvisories);
         Assert.Contains("Link: https://osv.dev/vulnerability/GHSA-test", viewModel.SelectedVulnerabilityAdvisories);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        var advisory = Assert.Single(viewModel.SelectedPackageDetail.Advisories);
+        Assert.Equal("GHSA-test", advisory.Id);
+        Assert.Equal("Medium", advisory.Severity);
+        Assert.Equal("transitive-package", advisory.AffectedPackage);
+        Assert.Equal("1.2.3", advisory.AffectedVersion);
+        Assert.Equal("vite > transitive-package", advisory.Relationship);
+        Assert.Equal("https://osv.dev/vulnerability/GHSA-test", advisory.Url);
+    }
+
+    [Fact]
+    public void SelectedPackageDetail_ExposesCorePackageDetailsWithoutAdvisories()
+    {
+        var viewModel = CreateViewModel(new FakeHandler());
+
+        viewModel.SelectedPackage = new PackageRef
+        {
+            Ecosystem = Ecosystem.DotNet,
+            PackageName = "Newtonsoft.Json",
+            DeclaredVersion = "13.0.1",
+            InstalledVersion = "13.0.1",
+            LatestVersion = "13.0.3",
+            UpdateType = VersionUpdateType.Patch,
+            VulnerabilitySeverity = VulnerabilitySeverity.None,
+            RelatedSecurityPackages =
+            {
+                new RelatedSecurityPackage
+                {
+                    Ecosystem = Ecosystem.DotNet,
+                    PackageName = "Transitive.Package",
+                    Version = "1.2.3",
+                    Relationship = "Newtonsoft.Json > Transitive.Package"
+                }
+            }
+        };
+
+        Assert.True(viewModel.HasSelectedPackageDetail);
+        Assert.NotNull(viewModel.SelectedPackageDetail);
+        Assert.Equal("Newtonsoft.Json", viewModel.SelectedPackageDetail.PackageName);
+        Assert.Equal(Ecosystem.DotNet, viewModel.SelectedPackageDetail.Ecosystem);
+        Assert.Equal("13.0.1", viewModel.SelectedPackageDetail.DeclaredVersion);
+        Assert.Equal("13.0.1", viewModel.SelectedPackageDetail.InstalledVersion);
+        Assert.Equal("13.0.3", viewModel.SelectedPackageDetail.LatestVersion);
+        Assert.Equal(VersionUpdateType.Patch, viewModel.SelectedPackageDetail.UpdateType);
+        Assert.Equal("None", viewModel.SelectedPackageDetail.VulnerabilityStatus);
+        Assert.Equal(1, viewModel.SelectedPackageDetail.RelatedSecurityPackageCount);
+        Assert.False(viewModel.SelectedPackageDetail.HasAdvisories);
+    }
+
+    [Fact]
+    public void SelectedPackageDetail_ClearsWhenSelectionClears()
+    {
+        var viewModel = CreateViewModel(new FakeHandler());
+
+        viewModel.SelectedPackage = new PackageRef
+        {
+            Ecosystem = Ecosystem.Npm,
+            PackageName = "vite",
+            DeclaredVersion = "5.0.0"
+        };
+
+        Assert.True(viewModel.HasSelectedPackageDetail);
+
+        viewModel.SelectedPackage = null;
+
+        Assert.False(viewModel.HasSelectedPackageDetail);
+        Assert.Null(viewModel.SelectedPackageDetail);
     }
 
     [Fact]

@@ -634,23 +634,125 @@ x:CompileBindings="True">
 					</controls:DataGrid>
 
 					<Border Grid.Row="4"
-							IsVisible="{Binding HasSelectedVulnerabilityAdvisories}"
+							IsVisible="{Binding HasSelectedPackageDetail}"
 							BorderBrush="#4B5563"
 							BorderThickness="1"
 							Margin="0,6,0,0"
 							Padding="6">
-						<Grid ColumnDefinitions="Auto,*"
-							  ColumnSpacing="8">
-							<TextBlock Grid.Column="0"
-									   Text="Advisories"
-									   FontWeight="SemiBold"
-									   VerticalAlignment="Top" />
-							<TextBox Grid.Column="1"
-									 Text="{Binding SelectedVulnerabilityAdvisories}"
-									 IsReadOnly="True"
-									 TextWrapping="Wrap"
-									 BorderThickness="0"
-									 Background="Transparent" />
+						<Grid RowDefinitions="Auto,Auto,Auto"
+							  RowSpacing="6"
+							  DataContext="{Binding SelectedPackageDetail}"
+							  x:CompileBindings="False">
+							<TextBlock Grid.Row="0"
+									   Text="{Binding PackageName}"
+									   FontWeight="SemiBold" />
+
+							<WrapPanel Grid.Row="1">
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Ecosystem"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding Ecosystem}" />
+								</StackPanel>
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Declared"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding DeclaredVersion}" />
+								</StackPanel>
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Installed"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding InstalledVersion}" />
+								</StackPanel>
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Latest"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding LatestVersion}" />
+								</StackPanel>
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Update"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding UpdateType}" />
+								</StackPanel>
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Vulnerabilities"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding VulnerabilityStatus}" />
+								</StackPanel>
+								<StackPanel Orientation="Horizontal"
+											Spacing="4"
+											Margin="0,0,14,2">
+									<TextBlock Text="Related security packages"
+											   Foreground="#9CA3AF" />
+									<TextBlock Text="{Binding RelatedSecurityPackageCount}" />
+								</StackPanel>
+							</WrapPanel>
+
+							<ItemsControl Grid.Row="2"
+										  IsVisible="{Binding HasAdvisories}"
+										  ItemsSource="{Binding Advisories}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate x:DataType="vm:PackageAdvisoryDetail">
+										<Border BorderBrush="#374151"
+												BorderThickness="1,0,0,0"
+												Margin="0,4,0,0"
+												Padding="8,3,0,0">
+											<Grid RowDefinitions="Auto,Auto,Auto"
+												  RowSpacing="3">
+												<WrapPanel Grid.Row="0">
+													<TextBlock Text="{Binding Id}"
+															   FontWeight="SemiBold"
+															   Margin="0,0,10,0" />
+													<TextBlock Text="{Binding Severity}"
+															   Foreground="#FCA5A5"
+															   Margin="0,0,10,0" />
+													<TextBlock Text="{Binding Source}"
+															   Foreground="#9CA3AF" />
+												</WrapPanel>
+												<WrapPanel Grid.Row="1">
+													<TextBlock Text="Affected"
+															   Foreground="#9CA3AF"
+															   Margin="0,0,4,0" />
+													<TextBlock Text="{Binding AffectedPackage}"
+															   Margin="0,0,2,0" />
+													<TextBlock Text="@"
+															   Margin="0,0,2,0" />
+													<TextBlock Text="{Binding AffectedVersion}"
+															   Margin="0,0,12,0" />
+													<TextBlock Text="Via"
+															   Foreground="#9CA3AF"
+															   Margin="0,0,4,0" />
+													<TextBlock Text="{Binding Relationship}"
+															   Margin="0,0,12,0" />
+													<TextBlock Text="Aliases"
+															   Foreground="#9CA3AF"
+															   Margin="0,0,4,0" />
+													<TextBlock Text="{Binding Aliases}" />
+												</WrapPanel>
+												<StackPanel Grid.Row="2"
+															Spacing="2">
+													<TextBlock Text="{Binding Summary}"
+															   TextWrapping="Wrap" />
+													<TextBlock Text="{Binding Url}"
+															   Foreground="#93C5FD"
+															   TextWrapping="Wrap" />
+												</StackPanel>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
 						</Grid>
 					</Border>
 				</Grid>
