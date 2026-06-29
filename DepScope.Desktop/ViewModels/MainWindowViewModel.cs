@@ -102,8 +102,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public ObservableCollection<ProjectGroup> ProjectGroups { get; } = new();
     public ObservableCollection<ProjectInfo> Projects { get; } = new();
+    public ObservableCollection<UpdateRecommendation> UpdateRecommendations { get; } = new();
 
     public bool CanExportReport => Projects.Any();
+    public bool HasUpdateRecommendations => UpdateRecommendations.Any();
 
     private WorkspaceRiskSummary _riskSummary = WorkspaceRiskSummary.Empty;
     public WorkspaceRiskSummary RiskSummary
@@ -949,7 +951,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void RefreshWorkspaceRiskSummary()
     {
         RiskSummary = WorkspaceRiskSummary.FromProjects(Projects);
+        RefreshUpdateRecommendations();
         OnPropertyChanged(nameof(CanExportReport));
+    }
+
+    private void RefreshUpdateRecommendations()
+    {
+        UpdateRecommendations.Clear();
+        foreach (var recommendation in UpdateRecommendation.FromProjects(Projects))
+            UpdateRecommendations.Add(recommendation);
+
+        OnPropertyChanged(nameof(HasUpdateRecommendations));
     }
 
     private void UpdateOutdatedSummaryAndNotify(bool force = false)

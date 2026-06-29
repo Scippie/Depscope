@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Added HTML export for current scan results.
 - Added a compact project risk summary with project, package, update, vulnerability, and severity counts.
+- Added an update priority advisor that highlights the top packages to review first.
 
 ### Fixed
 - Aligned project status indicators with unresolved/unknown checks so unknown projects are not shown as clean.

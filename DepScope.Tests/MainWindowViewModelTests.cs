@@ -49,6 +49,8 @@ public sealed class MainWindowViewModelTests : IDisposable
         Assert.Contains(viewModel.Projects, p => p.Name == "ProjectB");
         Assert.Single(viewModel.ProjectGroups);
         Assert.Equal(1, viewModel.RiskSummary.TotalProjects);
+        Assert.Single(viewModel.UpdateRecommendations);
+        Assert.Equal("Package.B", viewModel.UpdateRecommendations.Single().PackageName);
 
         var settingsJson = await File.ReadAllTextAsync(
             _settingsPath,
@@ -145,6 +147,93 @@ public sealed class MainWindowViewModelTests : IDisposable
         Assert.Equal(1, summary.VulnerablePackages);
         Assert.Equal(1, summary.CriticalSeverityPackages);
         Assert.Equal(0, summary.HighSeverityPackages);
+    }
+
+    [Fact]
+    public void UpdateRecommendations_OrderActionableItemsByPriority()
+    {
+        var project = new ProjectInfo
+        {
+            Name = "ProjectA",
+            Path = Path.Combine(_rootPath, "ProjectA", "package.json"),
+            Ecosystem = Ecosystem.Npm,
+            Packages =
+            {
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.Npm,
+                    PackageName = "major-only",
+                    DeclaredVersion = "1.0.0",
+                    LatestVersion = "2.0.0",
+                    UpdateType = VersionUpdateType.Major,
+                    VulnerabilitySeverity = VulnerabilitySeverity.None
+                },
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.Npm,
+                    PackageName = "critical-vuln",
+                    DeclaredVersion = "1.0.0",
+                    LatestVersion = "1.0.1",
+                    UpdateType = VersionUpdateType.Patch,
+                    VulnerabilitySeverity = VulnerabilitySeverity.Critical,
+                    VulnerabilityCount = 1
+                },
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.Npm,
+                    PackageName = "medium-vuln",
+                    DeclaredVersion = "1.0.0",
+                    UpdateType = VersionUpdateType.None,
+                    VulnerabilitySeverity = VulnerabilitySeverity.Medium,
+                    VulnerabilityCount = 1
+                },
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.Npm,
+                    PackageName = "unknown-check",
+                    DeclaredVersion = "1.0.0",
+                    UpdateType = VersionUpdateType.Unknown,
+                    VulnerabilitySeverity = VulnerabilitySeverity.NotChecked
+                }
+            }
+        };
+
+        var recommendations = UpdateRecommendation.FromProjects(new[] { project });
+
+        Assert.Equal(
+            new[] { "critical-vuln", "medium-vuln", "major-only", "unknown-check" },
+            recommendations.Select(recommendation => recommendation.PackageName));
+        Assert.Equal("Urgent", recommendations[0].PriorityLabel);
+        Assert.Contains("update is available", recommendations[0].Reason);
+        Assert.Equal("Review", recommendations[recommendations.Count - 1].PriorityLabel);
+    }
+
+    [Fact]
+    public void UpdateRecommendations_LimitToTopFive()
+    {
+        var project = new ProjectInfo
+        {
+            Name = "ProjectA",
+            Path = Path.Combine(_rootPath, "ProjectA", "package.json"),
+            Ecosystem = Ecosystem.Npm
+        };
+
+        for (var i = 0; i < 8; i++)
+        {
+            project.Packages.Add(new PackageRef
+            {
+                Ecosystem = Ecosystem.Npm,
+                PackageName = $"package-{i}",
+                DeclaredVersion = "1.0.0",
+                LatestVersion = "1.0.1",
+                UpdateType = VersionUpdateType.Patch,
+                VulnerabilitySeverity = VulnerabilitySeverity.None
+            });
+        }
+
+        var recommendations = UpdateRecommendation.FromProjects(new[] { project });
+
+        Assert.Equal(5, recommendations.Count);
     }
 
     [Fact]

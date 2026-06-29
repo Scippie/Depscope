@@ -399,7 +399,7 @@ x:CompileBindings="True">
 					BorderBrush="Gray"
 					BorderThickness="1">
 				<Grid Margin="5"
-					  RowDefinitions="Auto,Auto,*,Auto">
+					  RowDefinitions="Auto,Auto,Auto,*,Auto">
 					<!-- Header + filter on one line -->
 					<DockPanel Grid.Row="0"
 							   LastChildFill="False">
@@ -508,10 +508,59 @@ x:CompileBindings="True">
 						</StackPanel>
 					</WrapPanel>
 
+					<Border Grid.Row="2"
+							IsVisible="{Binding HasUpdateRecommendations}"
+							BorderBrush="#374151"
+							BorderThickness="1"
+							Margin="0,6,0,2"
+							Padding="6">
+						<Grid RowDefinitions="Auto,Auto">
+							<TextBlock Grid.Row="0"
+									   Text="Update first"
+									   FontWeight="SemiBold"
+									   Margin="0,0,0,4" />
+							<ItemsControl Grid.Row="1"
+										  ItemsSource="{Binding UpdateRecommendations}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate x:DataType="vm:UpdateRecommendation">
+										<Grid ColumnDefinitions="72,2*,*,*,2*"
+											  ColumnSpacing="8"
+											  Margin="0,1">
+											<TextBlock Grid.Column="0"
+													   Text="{Binding PriorityLabel}"
+													   FontSize="12"
+													   FontWeight="SemiBold"
+													   Foreground="#FCA5A5" />
+											<TextBlock Grid.Column="1"
+													   Text="{Binding PackageName}"
+													   FontSize="12"
+													   TextTrimming="CharacterEllipsis" />
+											<TextBlock Grid.Column="2"
+													   Text="{Binding ProjectName}"
+													   FontSize="12"
+													   Foreground="#9CA3AF"
+													   TextTrimming="CharacterEllipsis" />
+											<TextBlock Grid.Column="3"
+													   Text="{Binding VersionSummary}"
+													   FontSize="12"
+													   Foreground="#D1D5DB"
+													   TextTrimming="CharacterEllipsis" />
+											<TextBlock Grid.Column="4"
+													   Text="{Binding Reason}"
+													   FontSize="12"
+													   Foreground="#D1D5DB"
+													   TextTrimming="CharacterEllipsis" />
+										</Grid>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</Grid>
+					</Border>
+
 					<!-- DataGrid with auto columns for now -->
 					<controls:DataGrid
 					x:CompileBindings="False"
-					Grid.Row="2"
+					Grid.Row="3"
 					ItemsSource="{Binding FilteredPackages}"
 					SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
 					AutoGenerateColumns="False"
@@ -584,7 +633,7 @@ x:CompileBindings="True">
 						</controls:DataGrid.Columns>
 					</controls:DataGrid>
 
-					<Border Grid.Row="3"
+					<Border Grid.Row="4"
 							IsVisible="{Binding HasSelectedVulnerabilityAdvisories}"
 							BorderBrush="#4B5563"
 							BorderThickness="1"
