@@ -131,6 +131,48 @@ public partial class MainWindow : Window
         await _vm.RescanSavedRootsInBackgroundAsync(manual: true);
     }
 
+    private async void OnExportHtmlClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (!_vm.CanExportReport)
+        {
+            _vm.StatusMessage = "No scan results to export.";
+            return;
+        }
+
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export HTML report",
+            SuggestedFileName = $"depscope-report-{DateTime.Now:yyyyMMdd-HHmm}.html",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("HTML report")
+                {
+                    Patterns = new[] { "*.html" },
+                    MimeTypes = new[] { "text/html" }
+                }
+            }
+        });
+
+        if (file is null)
+            return;
+
+        var path = file.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            _vm.StatusMessage = "Export failed: select a local file path.";
+            return;
+        }
+
+        try
+        {
+            await _vm.ExportHtmlReportAsync(path, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _vm.StatusMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
     private void OnSettingsButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (sender is Button btn)

@@ -48,11 +48,103 @@ public sealed class MainWindowViewModelTests : IDisposable
         Assert.DoesNotContain(viewModel.Projects, p => p.Name == "ProjectA");
         Assert.Contains(viewModel.Projects, p => p.Name == "ProjectB");
         Assert.Single(viewModel.ProjectGroups);
+        Assert.Equal(1, viewModel.RiskSummary.TotalProjects);
 
         var settingsJson = await File.ReadAllTextAsync(
             _settingsPath,
             TestContext.Current.CancellationToken);
         Assert.Contains(_rootPath.Replace("\\", "\\\\"), settingsJson);
+    }
+
+    [Fact]
+    public void RiskSummary_CountsProjectsPackagesAndSeverityByPriority()
+    {
+        var projects = new[]
+        {
+            new ProjectInfo
+            {
+                Name = "CleanProject",
+                Path = Path.Combine(_rootPath, "CleanProject", "CleanProject.csproj"),
+                Ecosystem = Ecosystem.DotNet,
+                Packages =
+                {
+                    new PackageRef
+                    {
+                        Ecosystem = Ecosystem.DotNet,
+                        PackageName = "Package.Clean",
+                        DeclaredVersion = "1.0.0",
+                        UpdateType = VersionUpdateType.None,
+                        VulnerabilitySeverity = VulnerabilitySeverity.None
+                    }
+                }
+            },
+            new ProjectInfo
+            {
+                Name = "OutdatedProject",
+                Path = Path.Combine(_rootPath, "OutdatedProject", "OutdatedProject.csproj"),
+                Ecosystem = Ecosystem.DotNet,
+                Packages =
+                {
+                    new PackageRef
+                    {
+                        Ecosystem = Ecosystem.DotNet,
+                        PackageName = "Package.Outdated",
+                        DeclaredVersion = "1.0.0",
+                        LatestVersion = "2.0.0",
+                        UpdateType = VersionUpdateType.Major,
+                        VulnerabilitySeverity = VulnerabilitySeverity.None
+                    }
+                }
+            },
+            new ProjectInfo
+            {
+                Name = "VulnerableProject",
+                Path = Path.Combine(_rootPath, "VulnerableProject", "VulnerableProject.csproj"),
+                Ecosystem = Ecosystem.DotNet,
+                Packages =
+                {
+                    new PackageRef
+                    {
+                        Ecosystem = Ecosystem.DotNet,
+                        PackageName = "Package.Vulnerable",
+                        DeclaredVersion = "1.0.0",
+                        UpdateType = VersionUpdateType.None,
+                        VulnerabilitySeverity = VulnerabilitySeverity.Critical,
+                        VulnerabilityCount = 1
+                    }
+                }
+            },
+            new ProjectInfo
+            {
+                Name = "UnknownProject",
+                Path = Path.Combine(_rootPath, "UnknownProject", "UnknownProject.csproj"),
+                Ecosystem = Ecosystem.DotNet,
+                Packages =
+                {
+                    new PackageRef
+                    {
+                        Ecosystem = Ecosystem.DotNet,
+                        PackageName = "Package.Unknown",
+                        DeclaredVersion = "1.0.0",
+                        UpdateType = VersionUpdateType.Unknown,
+                        VulnerabilitySeverity = VulnerabilitySeverity.NotChecked
+                    }
+                }
+            }
+        };
+
+        var summary = WorkspaceRiskSummary.FromProjects(projects);
+
+        Assert.Equal(4, summary.TotalProjects);
+        Assert.Equal(1, summary.CleanProjects);
+        Assert.Equal(1, summary.OutdatedProjects);
+        Assert.Equal(1, summary.VulnerableProjects);
+        Assert.Equal(1, summary.UnknownProjects);
+        Assert.Equal(4, summary.TotalPackages);
+        Assert.Equal(1, summary.OutdatedPackages);
+        Assert.Equal(1, summary.VulnerablePackages);
+        Assert.Equal(1, summary.CriticalSeverityPackages);
+        Assert.Equal(0, summary.HighSeverityPackages);
     }
 
     [Fact]
@@ -219,6 +311,37 @@ public sealed class MainWindowViewModelTests : IDisposable
             culture: System.Globalization.CultureInfo.InvariantCulture);
 
         Assert.Same(converter.VulnerableBrush, brush);
+    }
+
+    [Fact]
+    public void ProjectStatusBrush_ShowsUnknownWhenChecksAreUnresolved()
+    {
+        var converter = new ProjectStatusToBrushConverter();
+        var project = new ProjectInfo
+        {
+            Name = "ProjectA",
+            Path = Path.Combine(_rootPath, "ProjectA", "package.json"),
+            Ecosystem = Ecosystem.Npm,
+            Packages =
+            {
+                new PackageRef
+                {
+                    Ecosystem = Ecosystem.Npm,
+                    PackageName = "vite",
+                    DeclaredVersion = "5.0.0",
+                    UpdateType = VersionUpdateType.Unknown,
+                    VulnerabilitySeverity = VulnerabilitySeverity.NotChecked
+                }
+            }
+        };
+
+        var brush = converter.Convert(
+            project,
+            typeof(object),
+            parameter: null,
+            culture: System.Globalization.CultureInfo.InvariantCulture);
+
+        Assert.Same(converter.UnknownBrush, brush);
     }
 
     [Fact]

@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - Unreleased
+## [1.0.1] - Unreleased
+
+### Added
+- Added HTML export for current scan results.
+- Added a compact project risk summary with project, package, update, vulnerability, and severity counts.
+
+### Fixed
+- Aligned project status indicators with unresolved/unknown checks so unknown projects are not shown as clean.
+
+---
+
+## [1.0.0] - 2026-06-27
 
 ### Added
 - Added OSV-based vulnerability monitoring with package severity badges in the dependency grid.

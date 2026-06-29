@@ -44,6 +44,7 @@ This project started as a personal tool to help me keep my own projects up to da
 
 - **Dependency view**
   - Project tree on the left, package table on the right.
+  - Compact workspace risk summary with project, package, update, vulnerability, and severity counts.
   - Package columns: `Package`, `Declared`, `Installed`, `Latest`, `Vulnerabilities`, `UpdateType`.
   - Update types: `None`, `Patch`, `Minor`, `Major`, `Unknown`.
   - Vulnerability status shows the highest known severity and advisory count when a package/version is matched.
@@ -65,6 +66,10 @@ This project started as a personal tool to help me keep my own projects up to da
 - **Notifications**
   - Optional in-window summary notification after scans when the main window is visible.
   - Native OS notifications are intentionally not exposed yet.
+
+- **Report export**
+  - Export current scan results to an HTML report.
+  - The report includes project/package rows, declared/installed/latest versions, update status, vulnerability status, and advisory details.
 
 - **Updates**
   - Manual GitHub release check from Settings.
@@ -106,7 +111,8 @@ On macOS you may also need to allow the app in System Settings because release a
 4. Select a project in the left tree to inspect dependencies.
 5. Use the filter dropdown to focus on outdated packages.
 6. Use **Rescan** to immediately refresh saved roots without waiting for the automatic background rescan.
-7. Use **Remove** to stop tracking a selected project. If it is the last project in a root group, that root is removed from saved roots.
+7. Use **Export HTML** to save the current scan results as a local report.
+8. Use **Remove** to stop tracking a selected project. If it is the last project in a root group, that root is removed from saved roots.
 
 Typical workflows:
 
@@ -116,6 +122,7 @@ Typical workflows:
 - Configure registry/source URLs when your projects depend on private or mirrored package sources.
 - Use GitHub Actions scanning to inspect workflow action refs and see whether newer tags or releases are available.
 - Use the vulnerability details below the package grid to inspect advisory IDs, affected package versions, dependency paths, aliases, summaries, and OSV links.
+- Export an HTML report when you need to share or archive the current dependency and vulnerability status.
 
 ## Settings
 

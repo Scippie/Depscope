@@ -103,6 +103,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public ObservableCollection<ProjectGroup> ProjectGroups { get; } = new();
     public ObservableCollection<ProjectInfo> Projects { get; } = new();
 
+    public bool CanExportReport => Projects.Any();
+
+    private WorkspaceRiskSummary _riskSummary = WorkspaceRiskSummary.Empty;
+    public WorkspaceRiskSummary RiskSummary
+    {
+        get => _riskSummary;
+        private set
+        {
+            if (!Equals(value, _riskSummary))
+            {
+                _riskSummary = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public ProjectInfo? SelectedProject
     {
         get => _selectedProject;
@@ -223,6 +239,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             ProjectGroups.Clear();
             Projects.Clear();
+            RefreshWorkspaceRiskSummary();
             SelectedProject = null;
             SelectedPackage = null;
             OnPropertyChanged(nameof(FilteredPackages));
@@ -732,6 +749,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             {
                 ProjectGroups.Clear();
                 Projects.Clear();
+                RefreshWorkspaceRiskSummary();
                 SelectedProject = null;
                 SelectedPackage = null;
                 OnPropertyChanged(nameof(FilteredPackages));
@@ -809,6 +827,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             }
 
             UpdateOutdatedSummaryAndNotify();
+            RefreshWorkspaceRiskSummary();
             OnPropertyChanged(nameof(ProjectGroups));
             OnPropertyChanged(nameof(Projects));
             OnPropertyChanged(nameof(FilteredPackages));
@@ -827,6 +846,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             IsScanning = false;
             _scanGate.Release();
         }
+    }
+
+    public async Task ExportHtmlReportAsync(string filePath, CancellationToken ct = default)
+    {
+        if (!CanExportReport)
+        {
+            StatusMessage = "No scan results to export.";
+            return;
+        }
+
+        StatusMessage = "Exporting HTML report...";
+        await HtmlReportService.WriteReportAsync(ProjectGroups, filePath, ct);
+        StatusMessage = $"Exported HTML report to {Path.GetFileName(filePath)}.";
     }
 
     private async Task<ProjectGroup?> BuildProjectGroupAsync(
@@ -910,6 +942,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         Projects.Clear();
         foreach (var p in ProjectGroups.SelectMany(g => g.Projects))
             Projects.Add(p);
+
+        RefreshWorkspaceRiskSummary();
+    }
+
+    private void RefreshWorkspaceRiskSummary()
+    {
+        RiskSummary = WorkspaceRiskSummary.FromProjects(Projects);
+        OnPropertyChanged(nameof(CanExportReport));
     }
 
     private void UpdateOutdatedSummaryAndNotify(bool force = false)

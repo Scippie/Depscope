@@ -38,7 +38,14 @@ public sealed class ProjectStatusToBrushConverter : IValueConverter
             p.UpdateType == VersionUpdateType.Minor ||
             p.UpdateType == VersionUpdateType.Major);
 
-        return hasOutdated ? OutdatedBrush : OkBrush;
+        if (hasOutdated)
+            return OutdatedBrush;
+
+        var hasUnknown = proj.Packages.Any(p =>
+            p.UpdateType == VersionUpdateType.Unknown ||
+            p.VulnerabilitySeverity == VulnerabilitySeverity.NotChecked);
+
+        return hasUnknown ? UnknownBrush : OkBrush;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

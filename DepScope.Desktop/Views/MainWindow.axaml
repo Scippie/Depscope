@@ -86,7 +86,7 @@ x:CompileBindings="True">
 			</ScrollViewer>
 		</Flyout>
 	</Window.Resources>
-	<Grid RowDefinitions="Auto,*"
+	<Grid RowDefinitions="Auto,Auto,*"
 		  ColumnDefinitions="*">
 
 		<!-- TOP BAR -->
@@ -123,6 +123,11 @@ x:CompileBindings="True">
 						Click="OnRescanClick"
 						Margin="4,0,0,0" />
 
+				<Button Content="Export HTML"
+						Click="OnExportHtmlClick"
+						IsEnabled="{Binding CanExportReport}"
+						Margin="4,0,0,0" />
+
 				<TextBlock Text="{Binding StatusMessage}"
 						   VerticalAlignment="Center"
 						   Margin="10,0,0,0" />
@@ -135,8 +140,127 @@ x:CompileBindings="True">
 			</StackPanel>
 		</DockPanel>
 
+		<Border Grid.Row="1"
+				Margin="10,0,10,6"
+				BorderBrush="#374151"
+				BorderThickness="0,0,0,1"
+				Padding="0,2,0,8">
+			<WrapPanel>
+				<TextBlock Text="Risk"
+						   FontWeight="SemiBold"
+						   VerticalAlignment="Center"
+						   Margin="0,0,14,2" />
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Projects"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.TotalProjects}"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Clean"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.CleanProjects}"
+							   Foreground="#22C55E"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Updates"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.OutdatedProjects}"
+							   Foreground="#F97316"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Vulnerable"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.VulnerableProjects}"
+							   Foreground="#EF4444"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Unknown"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.UnknownProjects}"
+							   Foreground="#D1D5DB"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Packages"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.TotalPackages}"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Outdated"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.OutdatedPackages}"
+							   Foreground="#F97316"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Vulnerable packages"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.VulnerablePackages}"
+							   Foreground="#EF4444"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Critical"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.CriticalSeverityPackages}"
+							   Foreground="#EF4444"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="High"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.HighSeverityPackages}"
+							   Foreground="#F87171"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Medium"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.MediumSeverityPackages}"
+							   Foreground="#FDBA74"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+				<StackPanel Orientation="Horizontal"
+							Spacing="4"
+							Margin="0,0,14,2">
+					<TextBlock Text="Low"
+							   Foreground="#9CA3AF" />
+					<TextBlock Text="{Binding RiskSummary.LowSeverityPackages}"
+							   Foreground="#FDE68A"
+							   FontWeight="SemiBold" />
+				</StackPanel>
+			</WrapPanel>
+		</Border>
+
 		<!-- Main content -->
-		<Grid Grid.Row="1"
+		<Grid Grid.Row="2"
 			  Margin="10">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="2*" />
