@@ -4,14 +4,14 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NuGet.Common" Version="7.6.0" />
-		<PackageReference Include="NuGet.Configuration" Version="7.6.0" />
-		<PackageReference Include="NuGet.Protocol" Version="7.6.0" />
-		<PackageReference Include="NuGet.Versioning" Version="7.6.0" />
+		<PackageReference Include="NuGet.Common" Version="7.9.0" />
+		<PackageReference Include="NuGet.Configuration" Version="7.9.0" />
+		<PackageReference Include="NuGet.Protocol" Version="7.9.0" />
+		<PackageReference Include="NuGet.Versioning" Version="7.9.0" />
 	</ItemGroup>
 
 </Project>

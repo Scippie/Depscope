@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1] - 2026-26-29
+## [1.0.2] - 2026-09-07
+
+### Added
+- Update outdated packages
+
+---
+
+## [1.0.1] - 2026-06-29
 
 ### Added
 - Added HTML export for current scan results.
