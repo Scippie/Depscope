@@ -261,6 +261,58 @@ public sealed class CoreParserFixtureTests : IDisposable
     }
 
     [Fact]
+    public void GitHubActionsLatestTagCache_ReusesFreshEntriesByApiSource()
+    {
+        GitHubActionsEcosystemHandler.ClearLatestRepositoryTagCacheForTests();
+        var checkedAt = new DateTimeOffset(2026, 9, 7, 0, 0, 0, TimeSpan.Zero);
+
+        GitHubActionsEcosystemHandler.CacheLatestRepositoryTagForTests(
+            "actions/checkout",
+            "https://api.github.com/",
+            "v7.0.1",
+            checkedAt);
+
+        Assert.True(GitHubActionsEcosystemHandler.TryGetCachedLatestRepositoryTag(
+            "actions/checkout",
+            "https://api.github.com/",
+            checkedAt.AddHours(11).AddMinutes(59),
+            out var latestTag));
+        Assert.Equal("v7.0.1", latestTag);
+
+        Assert.False(GitHubActionsEcosystemHandler.TryGetCachedLatestRepositoryTag(
+            "actions/checkout",
+            "https://github.example.test/api/v3/",
+            checkedAt.AddHours(1),
+            out _));
+
+        Assert.False(GitHubActionsEcosystemHandler.TryGetCachedLatestRepositoryTag(
+            "actions/checkout",
+            "https://api.github.com/",
+            checkedAt.AddHours(12),
+            out _));
+    }
+
+    [Fact]
+    public void GitHubActionsLatestTagCache_ThrottlesMissingResults()
+    {
+        GitHubActionsEcosystemHandler.ClearLatestRepositoryTagCacheForTests();
+        var checkedAt = new DateTimeOffset(2026, 9, 7, 0, 0, 0, TimeSpan.Zero);
+
+        GitHubActionsEcosystemHandler.CacheLatestRepositoryTagForTests(
+            "actions/checkout",
+            "https://api.github.com/",
+            null,
+            checkedAt);
+
+        Assert.True(GitHubActionsEcosystemHandler.TryGetCachedLatestRepositoryTag(
+            "actions/checkout",
+            "https://api.github.com/",
+            checkedAt.AddHours(1),
+            out var latestTag));
+        Assert.Null(latestTag);
+    }
+
+    [Fact]
     public async Task NpmParser_UsesYarnLockForInstalledVersions()
     {
         var projectDir = Directory.CreateDirectory(Path.Combine(_rootPath, "npm-app"));

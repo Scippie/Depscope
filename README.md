@@ -166,7 +166,7 @@ Temporary downloaded update files are staged under the user-local `DepScope/Upda
 - Latest-version checks use public registries unless offline/private mode is enabled.
 - Vulnerability checks use OSV.dev when offline/private mode is disabled and a concrete package version is available.
 - Source overrides affect latest-version lookups for NuGet, npm, Go, Python, PHP/Packagist, Java/Maven, Rust/crates.io, and GitHub Actions.
-- GitHub Actions workflow scanning detects external `uses:` references and checks GitHub repository tags through the configured GitHub API when latest-version lookups are enabled.
+- GitHub Actions workflow scanning detects external `uses:` references and checks GitHub repository tags through the configured GitHub API when latest-version lookups are enabled. Latest tag results are cached in memory for 12 hours per repository and GitHub API source to reduce repeated GitHub calls during rescans.
 - GitHub Actions major-floating tags such as `v4` are treated as current until a newer major tag is available.
 - GitHub Actions ref pinning status is shown in the package grid's `Installed` column as `Tag/branch ref`, `Short SHA ref`, `SHA pinned`, or `Dynamic ref`.
 - GitHub Actions are not queried through OSV package vulnerability checks and show `N/A` in the vulnerability column.

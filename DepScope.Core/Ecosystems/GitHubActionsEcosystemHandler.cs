@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Net;
 using DepScope.Core.Models;
 
 namespace DepScope.Core.Ecosystems;
@@ -8,8 +9,11 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
 {
     public Ecosystem Ecosystem => Ecosystem.GitHubActions;
     private const string DefaultGitHubApiBaseUrl = "https://api.github.com/";
+    private static readonly TimeSpan LatestTagCacheDuration = TimeSpan.FromHours(12);
 
     private static readonly HttpClient _http = CreateHttpClient();
+    private static readonly object _latestTagCacheLock = new();
+    private static readonly Dictionary<string, LatestTagCacheEntry> _latestTagCache = new(StringComparer.OrdinalIgnoreCase);
 
     public bool CanHandleDirectory(string rootPath)
     {
@@ -220,8 +224,38 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
         if (parts.Length != 2)
             return null;
 
-        var owner = Uri.EscapeDataString(parts[0]);
-        var repo = Uri.EscapeDataString(parts[1]);
+        if (TryGetCachedLatestRepositoryTag(
+            repositoryKey,
+            gitHubApiBaseUrl,
+            DateTimeOffset.UtcNow,
+            out var cachedLatestTag))
+        {
+            return cachedLatestTag;
+        }
+
+        var latestTag = await FetchLatestRepositoryTagAsync(
+            parts[0],
+            parts[1],
+            gitHubApiBaseUrl,
+            ct);
+
+        CacheLatestRepositoryTag(
+            repositoryKey,
+            gitHubApiBaseUrl,
+            latestTag,
+            DateTimeOffset.UtcNow);
+
+        return latestTag;
+    }
+
+    private static async Task<string?> FetchLatestRepositoryTagAsync(
+        string ownerName,
+        string repoName,
+        string? gitHubApiBaseUrl,
+        CancellationToken ct)
+    {
+        var owner = Uri.EscapeDataString(ownerName);
+        var repo = Uri.EscapeDataString(repoName);
         var baseUrl = NormalizeGitHubApiBaseUrl(gitHubApiBaseUrl);
         var url = $"{baseUrl}repos/{owner}/{repo}/tags?per_page=100";
 
@@ -229,7 +263,12 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
         {
             using var response = await _http.GetAsync(url, ct);
             if (!response.IsSuccessStatusCode)
+            {
+                if (IsRateLimitedResponse(response))
+                    return null;
+
                 return await GetLatestRepositoryReleaseTagAsync(baseUrl, owner, repo, ct);
+            }
 
             await using var stream = await response.Content.ReadAsStreamAsync(ct);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
@@ -264,9 +303,13 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
 
             return bestTag ?? await GetLatestRepositoryReleaseTagAsync(baseUrl, owner, repo, ct);
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
         catch
         {
-            return await GetLatestRepositoryReleaseTagFromWebAsync(parts[0], parts[1], ct);
+            return await GetLatestRepositoryReleaseTagFromWebAsync(ownerName, repoName, ct);
         }
     }
 
@@ -282,10 +325,15 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
         {
             using var response = await _http.GetAsync(url, ct);
             if (!response.IsSuccessStatusCode)
+            {
+                if (IsRateLimitedResponse(response))
+                    return null;
+
                 return await GetLatestRepositoryReleaseTagFromWebAsync(
                     Uri.UnescapeDataString(owner),
                     Uri.UnescapeDataString(repo),
                     ct);
+            }
 
             await using var stream = await response.Content.ReadAsStreamAsync(ct);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
@@ -297,6 +345,10 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
                     Uri.UnescapeDataString(owner),
                     Uri.UnescapeDataString(repo),
                     ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
@@ -334,10 +386,88 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
             var html = await response.Content.ReadAsStringAsync(ct);
             return ExtractLatestTagFromHtml(html);
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
         catch
         {
             return null;
         }
+    }
+
+    internal static bool TryGetCachedLatestRepositoryTag(
+        string repositoryKey,
+        string? gitHubApiBaseUrl,
+        DateTimeOffset now,
+        out string? latestTag)
+    {
+        latestTag = null;
+        var cacheKey = CreateLatestRepositoryTagCacheKey(repositoryKey, gitHubApiBaseUrl);
+
+        lock (_latestTagCacheLock)
+        {
+            if (!_latestTagCache.TryGetValue(cacheKey, out var entry))
+                return false;
+
+            if (now - entry.CheckedAt >= LatestTagCacheDuration)
+            {
+                _latestTagCache.Remove(cacheKey);
+                return false;
+            }
+
+            latestTag = entry.LatestTag;
+            return true;
+        }
+    }
+
+    internal static void CacheLatestRepositoryTagForTests(
+        string repositoryKey,
+        string? gitHubApiBaseUrl,
+        string? latestTag,
+        DateTimeOffset checkedAt)
+    {
+        CacheLatestRepositoryTag(repositoryKey, gitHubApiBaseUrl, latestTag, checkedAt);
+    }
+
+    internal static void ClearLatestRepositoryTagCacheForTests()
+    {
+        lock (_latestTagCacheLock)
+        {
+            _latestTagCache.Clear();
+        }
+    }
+
+    private static void CacheLatestRepositoryTag(
+        string repositoryKey,
+        string? gitHubApiBaseUrl,
+        string? latestTag,
+        DateTimeOffset checkedAt)
+    {
+        var cacheKey = CreateLatestRepositoryTagCacheKey(repositoryKey, gitHubApiBaseUrl);
+
+        lock (_latestTagCacheLock)
+        {
+            _latestTagCache[cacheKey] = new LatestTagCacheEntry(latestTag, checkedAt);
+        }
+    }
+
+    private static string CreateLatestRepositoryTagCacheKey(
+        string repositoryKey,
+        string? gitHubApiBaseUrl)
+    {
+        return $"{NormalizeGitHubApiBaseUrl(gitHubApiBaseUrl)}|{repositoryKey}";
+    }
+
+    private static bool IsRateLimitedResponse(HttpResponseMessage response)
+    {
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            return true;
+
+        return response.StatusCode == HttpStatusCode.Forbidden &&
+               (response.Headers.RetryAfter is not null ||
+                (response.Headers.TryGetValues("X-RateLimit-Remaining", out var values) &&
+                 values.Any(value => value.Trim() == "0")));
     }
 
     internal static string? ExtractLatestTagFromReleaseRedirect(string? url)
@@ -540,4 +670,6 @@ public sealed partial class GitHubActionsEcosystemHandler : IEcosystemHandler
 
     [GeneratedRegex(@"^[0-9a-fA-F]{7,39}$")]
     private static partial Regex ShortGitShaRegex();
+
+    private sealed record LatestTagCacheEntry(string? LatestTag, DateTimeOffset CheckedAt);
 }

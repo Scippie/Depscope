@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Update outdated packages
 
+### Fixed
+- Reduced repeated GitHub Actions latest-version calls by caching latest tag lookups for 12 hours per repository/API source and by avoiding fallback calls after GitHub rate-limit responses.
+- Rolled test runner packages back to the previously working xUnit v3 package set after the `4.0.0` update introduced GitHub Actions test failures in release validation.
+
 ---
 
 ## [1.0.1] - 2026-06-29
