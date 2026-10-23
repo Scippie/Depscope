@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.x"
 
       - name: Restore
         run: dotnet restore DepScope.sln
@@ -28,7 +28,7 @@ jobs:
         run: dotnet build DepScope.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test DepScope.sln --configuration Release --no-build
+        run: dotnet test --solution DepScope.sln --configuration Release --no-build --minimum-expected-tests 1 --output Detailed --no-progress
 
   build:
     needs: validate
@@ -45,7 +45,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.x"
 
       - name: Publish ${{ matrix.rid }}
         run: |

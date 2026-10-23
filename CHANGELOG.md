@@ -2,10 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.3] - 2026-22-10
+## [1.0.3] - 2026-23-10
 
 ### Added
 - Update outdated packages
+
+### Changed
+- Migrated all projects, CI validation, and release publishing from .NET 8 to .NET 10 LTS.
+- Adopted the .NET 10 native Microsoft Testing Platform workflow for xUnit 4 tests.
+- Added a tracked SDK and test-runner configuration so local development and GitHub Actions use the same .NET 10 toolchain.
+- Updated the transitive `System.Security.Cryptography.Pkcs` dependency to patched version `10.0.13`.
 
 ## [1.0.2] - 2026-09-07
 

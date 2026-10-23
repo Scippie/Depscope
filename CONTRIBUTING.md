@@ -46,11 +46,11 @@ Guidelines:
   - macOS
   - Linux
 - Run the automated test suite before committing or opening a PR:
-  - `dotnet test`
+  - `dotnet test --solution DepScope.sln`
 - For scanner changes, also run DepScope against at least one real local repository.
 - Do not include secrets, credentials, tokens, certificates, private registry URLs with credentials, or private project data in issues, commits, screenshots, or logs.
 - Follow existing code style:
-  - C# 10 / .NET 8
+  - C# 14 / .NET 10
   - Use `async`/`await` and cancellation tokens where appropriate.
   - Keep ecosystem handlers robust (catch network/parse errors and degrade gracefully).
 

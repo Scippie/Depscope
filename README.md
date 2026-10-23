@@ -3,14 +3,14 @@
 ![Image](DepScope.Desktop/Assets/DepScope_img.png?raw=true)
 
 DepScope is a cross-platform desktop app for Windows, macOS, and Linux that scans local projects for outdated dependencies across multiple ecosystems.
-It is built with **.NET 8** and **Avalonia UI**.
+It is built with **.NET 10** and **Avalonia UI**.
 
 DepScope is local-first: project files are read from your machine, source code is not uploaded, and startup update checks are disabled by default. Registry lookups can also be disabled with offline/private mode.
 
 This project started as a personal tool to help me keep my own projects up to date and easier to review. I developed it for my own workflow, with OpenAI assistance used for parts of the implementation, review, and documentation process. I am publishing it because it may also help other developers monitor dependencies, spot outdated packages, and keep projects safer.
 
 ![Version](https://img.shields.io/badge/version-1.0.3-blue)
-![.NET](https://img.shields.io/badge/.NET-8.0-5C2D91?logo=dotnet)
+![.NET](https://img.shields.io/badge/.NET-10.0-5C2D91?logo=dotnet)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![Platform](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
 ![Platform](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
@@ -188,7 +188,7 @@ Temporary downloaded update files are staged under the user-local `DepScope/Upda
 
 Prerequisites:
 
-- .NET 8 SDK.
+- .NET 10 SDK.
 - Git.
 - A supported desktop OS: Windows, macOS, or Linux.
 
@@ -203,7 +203,7 @@ dotnet run --project DepScope.Desktop/DepScope.Desktop.csproj
 Run tests before committing code changes:
 
 ```powershell
-dotnet test
+dotnet test --solution DepScope.sln
 ```
 
 Project layout:
