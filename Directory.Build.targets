@@ -1,0 +1,5 @@
+<Project>
+	<!-- Avalonia build telemetry is optional and must not make local builds fail when
+	     the per-user telemetry directory is unavailable or read-only. -->
+	<Target Name="AvaloniaStats" />
+</Project>

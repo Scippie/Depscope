@@ -16,6 +16,8 @@ CODEX_SESSION_RECAP.md
 *.userosscache
 *.sln.docstates
 *.env
+AGENTS_ENTERPRISE_PRODUCTION.md
+global.json
 
 
 # User-specific files (MonoDevelop/Xamarin Studio)

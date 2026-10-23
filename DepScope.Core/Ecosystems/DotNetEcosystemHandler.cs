@@ -381,6 +381,9 @@ public sealed class DotNetEcosystemHandler : IEcosystemHandler
             var repository = Repository.Factory.GetCoreV3(packageSource);
             var metadataResource = await repository.GetResourceAsync<PackageMetadataResource>(ct);
 
+            if (metadataResource is null)
+                return null;
+
             using var cacheContext = new SourceCacheContext();
             var metadata = await metadataResource.GetMetadataAsync(
                 packageId,
